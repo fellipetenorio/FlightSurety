@@ -93,6 +93,11 @@ contract FlightSuretyData {
         _;
     }
 
+    modifier isFirstAirline(address firstAirline) {
+        require(airlineCount == 0, "First Airline already registred");
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -137,6 +142,12 @@ contract FlightSuretyData {
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
+
+
+    function registerFirstAirline (address airline) public isFirstAirline(airline) {
+        airlines[airline] = Airline({isRegistered: true, isFunded: false});
+        airlineCount = airlineCount.add(1);
+    }
 
    /**
     * @dev Add an airline to the registration queue

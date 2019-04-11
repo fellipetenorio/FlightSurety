@@ -54,7 +54,7 @@ contract FlightSuretyApp {
         contractOwner = msg.sender;
         appData = FlightSuretyData(dataContract);
         // sender is the first airline
-        appData.registerAirline(msg.sender, msg.sender);
+        appData.registerFirstAirline(msg.sender);
     }
 
     /********************************************************************************************/
@@ -345,4 +345,5 @@ contract FlightSuretyData {
     function isOperational() public view returns(bool);
     function registerAirline(address airline, address registredAirline) public returns (bool, bool);
     function airlineSubmitFunds() public payable;
+    function registerFirstAirline (address airline) public;
 }
