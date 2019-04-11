@@ -11,6 +11,8 @@ contract FlightSuretyData {
 
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
+    mapping(address => uint256) authorizedContracts;                    // register authorizedContracts
+    mapping(address => uint256) airlines;                                                 // Registred Airline
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -27,6 +29,8 @@ contract FlightSuretyData {
                                 public 
     {
         contractOwner = msg.sender;
+        // sender is the first airline
+        airlines[msg.sender] = 1;
     }
 
     /********************************************************************************************/
@@ -53,6 +57,12 @@ contract FlightSuretyData {
     modifier requireContractOwner()
     {
         require(msg.sender == contractOwner, "Caller is not contract owner");
+        _;
+    }
+
+    modifier isCallerAuthorized()
+    {
+        require(authorizedContracts[msg.sender] == 1, "Unauthorized access (Caller)");
         _;
     }
 
@@ -89,6 +99,14 @@ contract FlightSuretyData {
         operational = mode;
     }
 
+    function authorizeCaller(address dataContract) external requireContractOwner {
+        authorizedContracts[dataContract] = 1;
+    }
+
+    function unauthorizeCaller(address dataContract) external requireContractOwner {
+        authorizedContracts[dataContract] = 0;
+    }
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -99,11 +117,25 @@ contract FlightSuretyData {
     *
     */   
     function registerAirline
-                            (   
-                            )
+                            (address airline)
                             external
-                            pure
     {
+        airlines[airline] = 1;
+    }
+
+   /**
+    * @dev Verify if an address is a Airline
+    *
+    */   
+    function isAirline
+                            (address airline
+                            )
+                            public
+                            view
+                            isCallerAuthorized
+                            returns (bool)
+    {
+        return airlines[airline] == 1;
     }
 
 
