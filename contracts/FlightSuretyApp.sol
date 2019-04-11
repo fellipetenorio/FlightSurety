@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.24;
 
 // It's important to avoid vulnerabilities due to numeric overflow bugs
 // OpenZeppelin's SafeMath library, when used correctly, protects agains such bugs
@@ -38,6 +38,26 @@ contract FlightSuretyApp {
     FlightSuretyData appData;
 
     /********************************************************************************************/
+    /*                                       CONSTRUCTOR                                        */
+    /********************************************************************************************/
+
+    /**
+    * @dev Contract constructor
+    *
+    */
+    constructor
+                                (
+                                    address dataContract
+                                )
+                                public 
+    {
+        contractOwner = msg.sender;
+        appData = FlightSuretyData(dataContract);
+        // sender is the first airline
+        appData.registerAirline(msg.sender, msg.sender);
+    }
+
+    /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
 
@@ -66,24 +86,6 @@ contract FlightSuretyApp {
     }
 
     /********************************************************************************************/
-    /*                                       CONSTRUCTOR                                        */
-    /********************************************************************************************/
-
-    /**
-    * @dev Contract constructor
-    *
-    */
-    constructor
-                                (
-                                    address dataContract
-                                ) 
-                                public 
-    {
-        contractOwner = msg.sender;
-        appData = FlightSuretyData(dataContract);
-    }
-
-    /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
 
@@ -105,13 +107,12 @@ contract FlightSuretyApp {
     *
     */   
     function registerAirline
-                            (   
-                            )
+                            (address airline)
                             external
-                            pure
-                            returns(bool success, uint256 votes)
+                            returns(bool success, bool registred)
     {
-        return (success, 0);
+
+        return appData.registerAirline(airline, msg.sender);
     }
 
 
@@ -234,7 +235,7 @@ contract FlightSuretyApp {
                             )
                             view
                             external
-                            returns(uint8[3])
+                            returns(uint8[3] memory)
     {
         require(oracles[msg.sender].isRegistered, "Not registered as an oracle");
 
@@ -342,4 +343,6 @@ contract FlightSuretyApp {
 
 contract FlightSuretyData {
     function isOperational() public view returns(bool);
+    function registerAirline(address airline, address registredAirline) public returns (bool, bool);
+    function airlineSubmitFunds() public payable;
 }
