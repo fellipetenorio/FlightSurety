@@ -85,6 +85,11 @@ contract FlightSuretyApp {
         _;
     }
 
+    modifier requireNotContract() {
+        require(msg.sender == tx.origin, "Contract now allowed");
+        _;
+    }
+
     // TODO give back airline fund change
 
     /********************************************************************************************/
@@ -146,6 +151,13 @@ contract FlightSuretyApp {
         require(airlineCount == 0, "First Airline already registred");
         _;
     }
+
+    modifier returnFundChange() {
+        _;
+        uint _price = AIRLINE_FUND;
+        uint amountToReturn = msg.value - _price;
+        msg.sender.transfer(amountToReturn);
+    }
 //endregion
 
    /**
@@ -190,8 +202,10 @@ contract FlightSuretyApp {
 
     function airlineFund() public payable 
     requireIsAirline(msg.sender) 
-    requireAirlineFund {
+    requireAirlineFund
+    returnFundChange {
         // Airline sent fund
+        appData.transfer(AIRLINE_FUND);
         appData.setAirlineFunded(msg.sender);
         
         emit AirlineFunded(msg.sender);

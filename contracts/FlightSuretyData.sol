@@ -126,6 +126,8 @@ contract FlightSuretyData {
                             external
                             isCallerAuthorized
     {
+        require(!airlines[airline].isRegistered, "Airline alreade registred");
+        
         airlines[airline] = Airline({isRegistered: true, isFunded: false});
     }
 
