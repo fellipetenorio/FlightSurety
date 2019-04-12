@@ -121,6 +121,21 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */   
+    function unregisterAirline
+                            (address airline)
+                            external
+                            isCallerAuthorized
+    {
+        if(airlines[airline].isRegistered) {
+            delete airlines[airline];
+        }
+    }
+
+    /**
+     * @dev Add an airline to the registration queue
+     *      Can only be called from FlightSuretyApp contract
+     *
+     */   
     function registerAirline
                             (address airline)
                             external

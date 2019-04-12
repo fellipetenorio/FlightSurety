@@ -21,7 +21,10 @@ var Config = async function(accounts) {
 
     let owner = accounts[0];
     let firstAirline = accounts[1];
-    
+    // An account that never should be an Airline in all blockchain history
+    // If that happen, restart de blockchain
+    let neverAirline = accounts[accounts.length-1];
+
     let flightSuretyData = await FlightSuretyData.new();
     let flightSuretyApp = await FlightSuretyApp.new(flightSuretyData.address);
 
@@ -33,7 +36,8 @@ var Config = async function(accounts) {
         airlineFund: (new BigNumber(100)).pow(18),
         testAddresses: testAddresses,
         flightSuretyData: flightSuretyData,
-        flightSuretyApp: flightSuretyApp
+        flightSuretyApp: flightSuretyApp,
+        neverAirline: neverAirline
     }
 }
 

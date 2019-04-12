@@ -8,9 +8,10 @@ module.exports = function(deployer) {
     console.log('deploying');
     deployer.deploy(FlightSuretyData)
     .then(() => {
-        console.log('appData', FlightSuretyData.address);
+        console.log('Data Contract', FlightSuretyData.address);
         return deployer.deploy(FlightSuretyApp, FlightSuretyData.address)
                 .then(() => {
+                    console.log('App Contract', FlightSuretyApp.address);
                     let config = {
                         localhost: {
                             url: 'http://127.0.0.1:8545/',

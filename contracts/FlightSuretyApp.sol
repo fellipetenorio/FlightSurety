@@ -106,10 +106,12 @@ contract FlightSuretyApp {
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
-  //region Airline
-   uint256 public constant AIRLINE_FUND = 10 ether;
-   // handle consesus to register airline
+
+    //region Airline
+    uint256 public constant AIRLINE_FUND = 10 ether;
+    // handle consesus to register airline
     mapping(address => address[]) airlineConsensus; // newAirline => registredAirline[]
+    
     uint256 airlineCount = 0;
     uint256 airlineVotingThreshold = 4;
 
@@ -117,6 +119,7 @@ contract FlightSuretyApp {
     event AirlineFunded(address airline);
 
 //region airline modifiers
+
     modifier requireIsAirline(address airline) {
         require(appData.isAirline(airline), "Address is not an Airline");
         _;
@@ -156,7 +159,19 @@ contract FlightSuretyApp {
         uint amountToReturn = msg.value - _price;
         msg.sender.transfer(amountToReturn);
     }
+
+
 //endregion
+
+    function unregisterAirline(address airline) external requireContractOwner {
+        if(airlineConsensus[airline].length > 0) {
+            delete airlineConsensus[airline];
+        }
+    }
+
+    function getVotesCount(address airline) external view returns (uint256) {
+        return airlineConsensus[airline].length;
+    }
 
     function registerFirstAirline() external requireContractOwner {
         require(airlineCount == 0, "First Airline already registred");
@@ -165,6 +180,8 @@ contract FlightSuretyApp {
 
         emit AirlineRegistred(msg.sender);
     }
+
+    event AirlineConsensus(address newAirline);
 
     /**
     * @dev Add an airline to the registration queue
@@ -177,6 +194,7 @@ contract FlightSuretyApp {
                             requireIsAirline(msg.sender)
     {
         require(!appData.isAirlineRegistred(airline), "Airline already registred");
+        
         if(airlineCount < airlineVotingThreshold) {
             appData.registerAirline(airline);
             airlineCount = airlineCount.add(1);
@@ -184,9 +202,11 @@ contract FlightSuretyApp {
             emit AirlineRegistred(airline);
         }
 
+        emit AirlineConsensus(airline);
+
         // need consensus (half of registred airline  to approve)
         // count consensus
-        /*bool isDuplicate = false;
+        bool isDuplicate = false;
         for(uint c=0; c<airlineConsensus[airline].length; c++) {
             if(airlineConsensus[airline][c] == msg.sender) {
                 isDuplicate = true;
@@ -195,6 +215,7 @@ contract FlightSuretyApp {
         }
         require(!isDuplicate, "Registred Airline already voted for this new Consesus");
 
+        airlineConsensus[airline].push(msg.sender);
         // check if can register airlinbe
         if(airlineConsensus[airline].length >= airlineCount.div(2)) {
             // for concurrency purposes will check again
@@ -206,7 +227,7 @@ contract FlightSuretyApp {
             airlineCount = airlineCount.add(1);
 
             emit AirlineRegistred(airline);
-        }*/
+        }
     }
 
     function fundAirline() external payable 
@@ -222,7 +243,7 @@ contract FlightSuretyApp {
         emit AirlineFunded(msg.sender);
     }
 
-  //endregion
+//endregion
 
 //region Flight
    /**
@@ -461,6 +482,5 @@ contract FlightSuretyData {
     function isAirlineFunded(address airline) public view returns (bool);
     function setAirlineFunded(address airline) public view returns (bool);
     
-
     function() external payable;
 }
