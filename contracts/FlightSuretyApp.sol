@@ -54,7 +54,7 @@ contract FlightSuretyApp {
         contractOwner = msg.sender;
         appData = FlightSuretyData(dataContract);
         // sender is the first airline
-        appData.registerFirstAirline(msg.sender);
+        appData.registerAirline(msg.sender);
     }
 
     /********************************************************************************************/
@@ -85,6 +85,8 @@ contract FlightSuretyApp {
         _;
     }
 
+    // TODO give back airline fund change
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -101,7 +103,51 @@ contract FlightSuretyApp {
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
-  
+  //region Airline
+   uint256 public constant AIRLINE_FUND = 10 ether;
+   // handle consesus to register airline
+    mapping(address => address[]) airlineConsensus; // newAirline => registredAirline[]
+    uint256 airlineCount = 0;
+    uint256 airlineVotingThreshold = 4;
+
+    event AirlineRegistred(address airline);
+    event AirlineFunded(address airline);
+
+//region airline modifiers
+    modifier requireIsAirline(address airline) {
+        require(appData.isAirline(airline), "Address is not an Airline");
+        _;
+    }
+
+    modifier requireAirlineAbleToFund(address airline) {
+        require(appData.isAirlineRegistred(airline), "Address is not an Airline");
+        require(appData.isAirline(airline), "Address is not an Airline");
+        _;
+    }
+
+    modifier requireAirlineFund() {
+        require(msg.value >= AIRLINE_FUND, "Fund not enough");
+        _;
+    }
+
+    modifier requireAirlineRegistred(address airline) {
+        require(appData.isAirlineRegistred(airline), "Airline not registred");
+        _;
+    }
+
+    // Airline only fund once
+    modifier requireAirlineNotFunded(address airline) {
+        require(appData.isAirlineRegistred(airline), "Airline not registred");
+        require(!appData.isAirlineFunded(airline), "Airline already funded");
+        _;
+    }
+
+    modifier isFirstAirline(address firstAirline) {
+        require(airlineCount == 0, "First Airline already registred");
+        _;
+    }
+//endregion
+
    /**
     * @dev Add an airline to the registration queue
     *
@@ -109,13 +155,51 @@ contract FlightSuretyApp {
     function registerAirline
                             (address airline)
                             external
-                            returns(bool success, bool registred)
     {
+        if(airlineCount <= airlineVotingThreshold) {
+            appData.registerAirline(airline);
+            airlineCount = airlineCount.add(1);
 
-        return appData.registerAirline(airline, msg.sender);
+            emit AirlineRegistred(airline);
+        }
+
+        // need consensus (half of registred airline  to approve)
+        // count consensus
+        bool isDuplicate = false;
+        for(uint c=0; c<airlineConsensus[airline].length; c++) {
+            if(airlineConsensus[airline][c] == msg.sender) {
+                isDuplicate = true;
+                break;
+            }
+        }
+        require(!isDuplicate, "Registred Airline already voted for this new Consesus");
+
+        // check if can register airlinbe
+        if(airlineConsensus[airline].length >= airlineCount.div(2)) {
+            // for concurrency purposes will check again
+            require(!appData.isAirlineRegistred(airline), "Airline already registred");
+
+            appData.registerAirline(airline);
+
+            // register airline
+            airlineCount = airlineCount.add(1);
+
+            emit AirlineRegistred(airline);
+        }
     }
 
+    function airlineFund() public payable 
+    requireIsAirline(msg.sender) 
+    requireAirlineFund {
+        // Airline sent fund
+        appData.setAirlineFunded(msg.sender);
+        
+        emit AirlineFunded(msg.sender);
+    }
 
+  //endregion
+
+//region Flight
    /**
     * @dev Register a future flight for insuring.
     *
@@ -165,8 +249,8 @@ contract FlightSuretyApp {
                                             });
 
         emit OracleRequest(index, airline, flight, timestamp);
-    } 
-
+    }
+//endregion
 
 // region ORACLE MANAGEMENT
 
@@ -343,7 +427,14 @@ contract FlightSuretyApp {
 
 contract FlightSuretyData {
     function isOperational() public view returns(bool);
-    function registerAirline(address airline, address registredAirline) public returns (bool, bool);
-    function airlineSubmitFunds() public payable;
-    function registerFirstAirline (address airline) public;
+    // airline
+    function isAirline(address airline) public view returns(bool);
+    
+    function isAirlineRegistred(address airline) public view returns (bool);
+    function registerAirline(address airline) public returns (bool, bool);
+
+    function isAirlineFunded(address airline) public view returns (bool);
+    function setAirlineFunded(address airline) public view returns (bool);
+    
+
 }

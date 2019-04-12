@@ -12,8 +12,7 @@ contract FlightSuretyData {
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
     mapping(address => uint256) authorizedContracts;                    // register authorizedContracts
-    uint256 airlineVotingThreshold = 4;
-
+    
     // Fee to be paid when registering oracle
     uint256 public constant REGISTRATION_FEE = 1 ether;
     struct Airline {
@@ -21,15 +20,11 @@ contract FlightSuretyData {
         bool isFunded;
     }
     mapping(address => Airline) airlines;
-    // handle consesus to register airline
-    mapping(address => address[]) airlineConsensus; // newAirline => registredAirline[]
-    uint256 airlineCount = 0;
+
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
-
-    event AirlineRegistred(address airline);
 
     /**
     * @dev Constructor
@@ -76,28 +71,6 @@ contract FlightSuretyData {
         _;
     }
 
-    modifier isRegistredAirline(address registredAirline) {
-        require(airlineCount == 0 || airlines[msg.sender].isRegistered, "Airline not registred");
-        _;
-    }
-
-    modifier isNewAirline(address airline) {
-        require(!airlines[airline].isRegistered, "Airline already registred");
-        _;
-    }
-
-    // Airline only fund once
-    modifier isAirlineNotFunded(address airline) {
-        require(airlines[airline].isRegistered, "Airline not registred");
-        require(!airlines[airline].isFunded, "Airline already funded");
-        _;
-    }
-
-    modifier isFirstAirline(address firstAirline) {
-        require(airlineCount == 0, "First Airline already registred");
-        _;
-    }
-
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -114,7 +87,6 @@ contract FlightSuretyData {
     {
         return operational;
     }
-
 
     /**
     * @dev Sets contract operations on/off
@@ -143,65 +115,26 @@ contract FlightSuretyData {
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
-
-    function registerFirstAirline (address airline) public isFirstAirline(airline) {
-        airlines[airline] = Airline({isRegistered: true, isFunded: false});
-        airlineCount = airlineCount.add(1);
-    }
-
-   /**
-    * @dev Add an airline to the registration queue
-    *      Can only be called from FlightSuretyApp contract
-    *
-    */   
+//region airline
+    /**
+     * @dev Add an airline to the registration queue
+     *      Can only be called from FlightSuretyApp contract
+     *
+     */   
     function registerAirline
-                            (address airline, address registredAirline)
+                            (address airline)
                             external
                             isCallerAuthorized
-                            isRegistredAirline(registredAirline)
-                            isNewAirline(airline)
-                            returns(bool, bool)
     {
-        if(airlineCount <= airlineVotingThreshold) {
-            airlines[airline] = Airline({isRegistered: true, isFunded: false});
-            airlineCount = airlineCount.add(1);
-
-            return (true, true);
-        }
-
-        // need consensus (half of registred airline  to approve)
-        // count consensus
-        bool isDuplicate = false;
-        for(uint c=0; c<airlineConsensus[airline].length; c++) {
-            if(airlineConsensus[airline][c] == msg.sender) {
-                isDuplicate = true;
-                break;
-            }
-        }
-        require(!isDuplicate, "Registred Airline already voted for this new Consesus");
-
-        // check if can register airlinbe
-        if(airlineConsensus[airline].length >= airlineCount.div(2)) {
-            // for concurrency purposes will check again
-            require(!airlines[airline].isRegistered, "Airline already registred");
-
-            airlines[airline] = Airline({isRegistered: true, isFunded: false});
-
-            // register airline
-            airlineCount = airlineCount.add(1);
-
-            emit AirlineRegistred(airline);
-        }
-
+        airlines[airline] = Airline({isRegistered: true, isFunded: false});
     }
 
-    // function airlineSubmitFunds(address airline) 
-    //     external payable 
-    //     isCallerAuthorized
-    //     isAirlineRegistred
-    // {
+    function airlineSubmitFunds(address airline) 
+         external 
+         isCallerAuthorized
+    {
         
-    // }
+    }
 
    /**
     * @dev Verify if an address is a Airline
@@ -218,7 +151,21 @@ contract FlightSuretyData {
         return airlines[airline].isRegistered;
     }
 
+    function isAirlineRegistred (address airline) public view isCallerAuthorized returns (bool) {
+        return airlines[airline].isRegistered;
+    }
 
+    function isAirlineFunded (address airline) public view isCallerAuthorized returns (bool) {
+        return airlines[airline].isFunded;
+    }
+
+    function setAirlineFunded (address airline) public isCallerAuthorized {
+        airlines[airline].isFunded = true;
+    }
+    
+//endregion
+
+//region Flight
    /**
     * @dev Buy insurance for a flight
     *
@@ -281,7 +228,7 @@ contract FlightSuretyData {
     {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
-
+//endregion
     /**
     * @dev Fallback function for funding smart contract.
     *
