@@ -53,8 +53,6 @@ contract FlightSuretyApp {
     {
         contractOwner = msg.sender;
         appData = FlightSuretyData(dataContract);
-        // sender is the first airline
-        appData.registerAirline(msg.sender);
     }
 
     /********************************************************************************************/
@@ -160,6 +158,14 @@ contract FlightSuretyApp {
     }
 //endregion
 
+    function registerFirstAirline() external requireContractOwner {
+        require(airlineCount == 0, "First Airline already registred");
+        appData.registerAirline(msg.sender);
+        airlineCount = airlineCount.add(1);
+
+        emit AirlineRegistred(msg.sender);
+    }
+
    /**
     * @dev Add an airline to the registration queue
     *
@@ -167,6 +173,8 @@ contract FlightSuretyApp {
     function registerAirline
                             (address airline)
                             external
+                            requireIsOperational
+                            requireIsAirline(msg.sender)
     {
         if(airlineCount <= airlineVotingThreshold) {
             appData.registerAirline(airline);
@@ -200,12 +208,12 @@ contract FlightSuretyApp {
         }
     }
 
-    function airlineFund() public payable 
+    function fundAirline() external payable 
     requireIsAirline(msg.sender) 
     requireAirlineFund
     returnFundChange {
         // Airline sent fund
-        appData.transfer(AIRLINE_FUND);
+        address(appData).transfer(AIRLINE_FUND);
         appData.setAirlineFunded(msg.sender);
         
         emit AirlineFunded(msg.sender);
@@ -445,10 +453,11 @@ contract FlightSuretyData {
     function isAirline(address airline) public view returns(bool);
     
     function isAirlineRegistred(address airline) public view returns (bool);
-    function registerAirline(address airline) public returns (bool, bool);
+    function registerAirline(address airline) external;
 
     function isAirlineFunded(address airline) public view returns (bool);
     function setAirlineFunded(address airline) public view returns (bool);
     
 
+    function() external payable;
 }

@@ -77,7 +77,9 @@ contract('Flight Surety Tests', async (accounts) => {
     let newAirline = accounts[2];
 
     // ACT
-    await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+    try {
+        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+    } catch (e) {}
     
     let result = await config.flightSuretyData.isAirline(newAirline, {from: config.flightSuretyApp.address}); 
     
@@ -85,21 +87,13 @@ contract('Flight Surety Tests', async (accounts) => {
     assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
   });
 
-  it('(airline) register first 4 without voting', async () => {
-    
-    // ARRANGE
-    let a2 = accounts[10];
-    let a3 = accounts[11];
-    let a4 = accounts[12];
-    let a5 = accounts[13];
 
-    //
-    // ACT
-    await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+  it('(airline) can register the first Airline', async () => {
+    try {
+        await config.flightSuretyApp.registerFirstAirline();
+    } catch(e){}
     
-    let result = await config.flightSuretyData.isAirline(newAirline, {from: config.flightSuretyApp.address}); 
-    
-    // ASSERT
-    assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
+    let result = await config.flightSuretyData.isAirline(config.owner, {from: config.flightSuretyApp.address});
+    assert.equal(result, true, "First Airline not registred");
   });
 });

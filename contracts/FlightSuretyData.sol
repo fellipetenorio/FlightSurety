@@ -81,7 +81,7 @@ contract FlightSuretyData {
     * @return A bool that is the current operating status
     */      
     function isOperational() 
-                            public 
+                            external 
                             view 
                             returns(bool) 
     {
@@ -126,16 +126,9 @@ contract FlightSuretyData {
                             external
                             isCallerAuthorized
     {
-        require(!airlines[airline].isRegistered, "Airline alreade registred");
-        
-        airlines[airline] = Airline({isRegistered: true, isFunded: false});
-    }
+        require(!airlines[airline].isRegistered, "Airline already registred");
 
-    function airlineSubmitFunds(address airline) 
-         external 
-         isCallerAuthorized
-    {
-        
+        airlines[airline] = Airline({isRegistered: true, isFunded: false});
     }
 
    /**
@@ -145,7 +138,7 @@ contract FlightSuretyData {
     function isAirline
                             (address airline
                             )
-                            public
+                            external
                             view
                             isCallerAuthorized
                             returns (bool)
@@ -153,15 +146,15 @@ contract FlightSuretyData {
         return airlines[airline].isRegistered;
     }
 
-    function isAirlineRegistred (address airline) public view isCallerAuthorized returns (bool) {
+    function isAirlineRegistred (address airline) external view isCallerAuthorized returns (bool) {
         return airlines[airline].isRegistered;
     }
 
-    function isAirlineFunded (address airline) public view isCallerAuthorized returns (bool) {
+    function isAirlineFunded (address airline) external view isCallerAuthorized returns (bool) {
         return airlines[airline].isFunded;
     }
 
-    function setAirlineFunded (address airline) public isCallerAuthorized {
+    function setAirlineFunded (address airline) external isCallerAuthorized {
         airlines[airline].isFunded = true;
     }
     
@@ -173,7 +166,7 @@ contract FlightSuretyData {
     *
     */   
     function buy
-                            (                             
+                            (
                             )
                             external
                             payable
@@ -211,7 +204,7 @@ contract FlightSuretyData {
     *
     */   
     function fund
-                            (   
+                            (
                             )
                             public
                             payable
