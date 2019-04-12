@@ -87,13 +87,59 @@ contract('Flight Surety Tests', async (accounts) => {
     assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
   });
 
-
   it('(airline) can register the first Airline', async () => {
     try {
         await config.flightSuretyApp.registerFirstAirline();
     } catch(e){}
-    
+
     let result = await config.flightSuretyData.isAirline(config.owner, {from: config.flightSuretyApp.address});
     assert.equal(result, true, "First Airline not registred");
   });
+
+  
+  it('(airline) can register the second Airline', async () => {
+    console.log('fundAirline', config.airlineFund);
+    let newAirline = accounts[2];
+    try {
+        await config.flightSuretyApp.fundAirline({from: config.owner, value: config.airlineFund});
+    } catch(e){}
+    
+    // now register the second airline
+    try {
+        await config.flightSuretyApp.registerAirline(newAirline, {from: config.owner});
+    } catch (e) {}
+
+    let result = await config.flightSuretyData.isAirline(newAirline, {from: config.flightSuretyApp.address});
+    assert.equal(result, true, "Second Airline not registred");
+  });
+  
+  it('(airline) can register third and fourth but no more', async () => {
+    console.log('fundAirline', config.airlineFund);
+    let third = accounts[3];
+    let fourth = accounts[4];
+    let fifth = accounts[5];
+    let sixth = accounts[6];
+    let seventh = accounts[7];
+    // now register the second airline
+    try {
+        await config.flightSuretyApp.registerAirline(third, {from: config.owner});
+        await config.flightSuretyApp.registerAirline(fourth, {from: config.owner});
+        await config.flightSuretyApp.registerAirline(fifth, {from: config.owner});
+        await config.flightSuretyApp.registerAirline(sixth, {from: config.owner});
+        await config.flightSuretyApp.registerAirline(seventh, {from: config.owner});
+    } catch (e) {}
+
+    let result3 = await config.flightSuretyData.isAirline(third, {from: config.flightSuretyApp.address});
+    let result4 = await config.flightSuretyData.isAirline(fourth, {from: config.flightSuretyApp.address});
+    let result5 = await config.flightSuretyData.isAirline(fifth, {from: config.flightSuretyApp.address});
+    let result6 = await config.flightSuretyData.isAirline(fifth, {from: config.flightSuretyApp.address});
+    let result7 = await config.flightSuretyData.isAirline(fifth, {from: config.flightSuretyApp.address});
+
+    assert.equal(result3, true, "Second Airline not registred");
+    assert.equal(result4, true, "Second Airline not registred");
+    assert.equal(result5, false, "Fifth is by votting!");
+    assert.equal(result6, false, "Fifth is by votting!");
+    assert.equal(result7, false, "Fifth is by votting!");
+  });
+
 });

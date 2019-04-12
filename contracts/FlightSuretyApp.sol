@@ -166,7 +166,7 @@ contract FlightSuretyApp {
         emit AirlineRegistred(msg.sender);
     }
 
-   /**
+    /**
     * @dev Add an airline to the registration queue
     *
     */   
@@ -176,7 +176,8 @@ contract FlightSuretyApp {
                             requireIsOperational
                             requireIsAirline(msg.sender)
     {
-        if(airlineCount <= airlineVotingThreshold) {
+        require(!appData.isAirlineRegistred(airline), "Airline already registred");
+        if(airlineCount < airlineVotingThreshold) {
             appData.registerAirline(airline);
             airlineCount = airlineCount.add(1);
 
@@ -185,7 +186,7 @@ contract FlightSuretyApp {
 
         // need consensus (half of registred airline  to approve)
         // count consensus
-        bool isDuplicate = false;
+        /*bool isDuplicate = false;
         for(uint c=0; c<airlineConsensus[airline].length; c++) {
             if(airlineConsensus[airline][c] == msg.sender) {
                 isDuplicate = true;
@@ -205,13 +206,15 @@ contract FlightSuretyApp {
             airlineCount = airlineCount.add(1);
 
             emit AirlineRegistred(airline);
-        }
+        }*/
     }
 
     function fundAirline() external payable 
     requireIsAirline(msg.sender) 
+    requireAirlineNotFunded(msg.sender)
     requireAirlineFund
-    returnFundChange {
+    returnFundChange
+    {
         // Airline sent fund
         address(appData).transfer(AIRLINE_FUND);
         appData.setAirlineFunded(msg.sender);
