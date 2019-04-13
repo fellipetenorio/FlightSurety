@@ -23,12 +23,12 @@ var Config = async function(accounts) {
     let firstAirline = accounts[1];
     // An account that never should be an Airline in all blockchain history
     // If that happen, restart de blockchain
-    let neverAirline = accounts[accounts.length-1];
+    let neverAirline = accounts[accounts.length-3];
+    let aNeverFunded = accounts[accounts.length-4];
 
-    let flightSuretyData = await FlightSuretyData.new();
-    let flightSuretyApp = await FlightSuretyApp.new(flightSuretyData.address);
+    let flightSuretyData = await FlightSuretyData.deployed().then(instance => {return instance});
+    let flightSuretyApp = await FlightSuretyApp.deployed().then(instance => {return instance});
 
-    
     return {
         owner: owner,
         firstAirline: firstAirline,
@@ -39,7 +39,7 @@ var Config = async function(accounts) {
         flightSuretyApp: flightSuretyApp,
         neverAirline: neverAirline
     }
-}
+};
 
 module.exports = {
     Config: Config
