@@ -177,21 +177,12 @@ contract('Flight Surety Tests', async (accounts) => {
         await fundAirline(config, airline3);
         await fundAirline(config, airline4);
 
-        // here 1-5 airlines (always 5 airline registered, maximum) is registred, so 3 votes is necessary to register 
-        let result = false;
-        result = await config.flightSuretyApp.registerAirline(airline5).then(async () => {
-            return await config.flightSuretyApp.registerAirline(airline5, {from: airline2}).then(async () => {
-                return await config.flightSuretyData.isAirline.call(airline5).then((result) => {
-                    return result;
-                })
-            });
-        });
-        // await registerAirline(config, airline5, airline2, true);
-        // await registerAirline(config, airline5, airline3, true);
-        // await registerAirline(config, airline5, airline4, true);
+        await registerAirline(config, airline5, config.owner);
+        await registerAirline(config, airline5, airline2, true);
+        await registerAirline(config, airline5, airline3, true);
+        await registerAirline(config, airline5, airline4, true);
         
-        // let result = await isAirline(config, airline5);
-        assert.equal(result, true, "Airline 5 not registred by votting");
+        assert.equal(await isAirline(config, airline5), true, 'Airline 5 not registered');
     });
 
 });
