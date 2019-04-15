@@ -127,9 +127,7 @@ contract FlightSuretyData {
     requireIsOperational
     isCallerAuthorized
     {
-        if (airlines[airline].isRegistered) {
-            delete airlines[airline];
-        }
+        airlines[airline] = Airline({isRegistered : false, isFunded : false});
     }
 
     /**

@@ -1,5 +1,12 @@
 var Test = require('../config/testConfig.js');
 var BigNumber = require('bignumber.js');
+var mCount = 1;
+var aCount = 1;
+let airline2;
+let airline3;
+let airline4;
+let airline5;
+let airlineNeveRegistered;
 
 contract('Flight Surety Tests', async (accounts) => {
 
@@ -16,13 +23,19 @@ contract('Flight Surety Tests', async (accounts) => {
         // register first airline (owner)
         await config.flightSuretyApp.registerFirstAirline();
         console.log('owner is Airline?', await config.flightSuretyData.isAirline.call(config.owner));
+
+        airline2 = accounts[20];
+        airline3 = accounts[21];
+        airline4 = accounts[22];
+        airline5 = accounts[23];
+        airlineNeveRegistered = config.neverAirline;
     });
 
     /****************************************************************************************/
     /* Operations and Settings                                                              */
     /****************************************************************************************/
-
-    it(`(multiparty1) has correct initial isOperational() value`, async function () {
+/*
+    it(`(multiparty${mCount++}) has correct initial isOperational() value`, async function () {
 
         // Get operating status
         let status = false;
@@ -35,7 +48,7 @@ contract('Flight Surety Tests', async (accounts) => {
 
     });
 
-    it(`(multiparty2) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
+    it(`(multiparty${mCount++}) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
 
         // Ensure that access is denied for non-Contract Owner account
         let accessDenied = false;
@@ -48,7 +61,7 @@ contract('Flight Surety Tests', async (accounts) => {
 
     });
 
-    it(`(multiparty3) can allow access to setOperatingStatus() for Contract Owner account`, async function () {
+    it(`(multiparty${mCount++}) can allow access to setOperatingStatus() for Contract Owner account`, async function () {
 
         // Ensure that access is allowed for Contract Owner account
         let accessDenied = false;
@@ -60,7 +73,7 @@ contract('Flight Surety Tests', async (accounts) => {
         assert.equal(accessDenied, false, "Access not restricted to Contract Owner");
     });
 
-    it(`(multiparty4) can block access to functions using requireIsOperational when operating status is false`, async function () {
+    it(`(multiparty${mCount++}) can block access to functions using requireIsOperational when operating status is false`, async function () {
         await config.flightSuretyData.setOperatingStatus(false);
 
         let reverted = false;
@@ -74,7 +87,7 @@ contract('Flight Surety Tests', async (accounts) => {
         await config.flightSuretyData.setOperatingStatus(true);
     });
 
-    it('(airline1) cannot register an Airline using registerAirline() if it is not funded', async function () {
+    it(`(airline${aCount++}) cannot register an Airline using registerAirline() if it is not funded`, async function () {
         // ARRANGE
         let result = true;
 
@@ -93,7 +106,7 @@ contract('Flight Surety Tests', async (accounts) => {
         assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
     });
 
-    it('(airline2) can be funded', async function () {
+    it(`(airline${aCount++}) can be funded`, async function () {
         let funded = false;
         try {
             await config.flightSuretyApp.fundAirline();
@@ -109,68 +122,110 @@ contract('Flight Surety Tests', async (accounts) => {
         assert.equal(funded, true, "Airline not funded");
     });
 
-    it('(airline2) can register 2th, 3th and 4th Airlines', async function () {
-        let airline2 = accounts[20];
-        let airline3 = accounts[21];
-        let airline4 = accounts[22];
+    it(`(airline${aCount++}) can register 2th, 3th and 4th Airlines`, async function () {
+        // fund previous airlines
+        await registerAirline(config, airline2, config.owner);
+        await registerAirline(config, airline3, config.owner);
+        await registerAirline(config, airline4, config.owner);
 
-        // now register the second airline
+        assert.equal(await isAirline(config, airline2), true, 'Airline 2 not registered');
+        assert.equal(await isAirline(config, airline3), true, 'Airline 3 not registered');
+        assert.equal(await isAirline(config, airline4), true, 'Airline 4 not registered');
+    });
+
+    it(`(airline${aCount++}) can fund 2th, 3th and 4th Airlines`, async function () {
+        // fund previous airlines
+        await fundAirline(config, airline2);
+        await fundAirline(config, airline3);
+        await fundAirline(config, airline4);
+
+        assert.equal(await getFundStatus(config, airline2), true, 'Airline 2 not funded');
+        assert.equal(await getFundStatus(config, airline3), true, 'Airline 3 not funded');
+        assert.equal(await getFundStatus(config, airline4), true, 'Airline 4 not funded');
+    });
+
+    it(`(airline${aCount++}) 5th do not have enough votes, so it can't be registered`, async function () {
+        // unregister so we can reproduce all
+        await unregisterAirline(config, airline5);
+        
+        // here 1-5 airlines (always 5 airline registered, maximum) is registred, so 3 votes is necessary to register 
+        await registerAirline(config, airline5, config.owner);
+        // await registerAirline(config, airline5, airline2);
+        // await registerAirline(config, airline5, airline3);
+        // await registerAirline(config, airline5, airline4);
+        
+        let result = false;
         try {
-            await config.flightSuretyApp.registerAirline(airline2);
+            result = await config.flightSuretyData.isAirline(airline5);
         } catch (e) {
-             //console.log('2 - airline2 fundAirline error', e);
-        }        try {
-            await config.flightSuretyApp.registerAirline(airline3);
-        } catch (e) {
-             //console.log('2 - airline2 fundAirline error', e);
-        }        try {
-            await config.flightSuretyApp.registerAirline(airline4);
-        } catch (e) {
-             //console.log('2 - airline2 fundAirline error', e);
+            //console.log('(airline1) isAirline error', e);
         }
-
-        let result2 = await config.flightSuretyData.isAirline.call(airline2);
-        let result3 = await config.flightSuretyData.isAirline.call(airline2);
-        let result4 = await config.flightSuretyData.isAirline.call(airline2);
-
-        assert.equal(result2, true, "Airline2 not registred");
-        assert.equal(result3, true, "Airline3 not registred");
-        assert.equal(result4, true, "Airline4 not registred");
+        assert.equal(result, false, "Airline 5 not registred by votting");
     });
+*/
+    it(`(airline${aCount++}) 5th have enough votes, so it can be registered`, async function () {
+        console.log('airline5', airline5);
+        // unregister so we can reproduce all
+        await unregisterAirline(config, airline5);
+        
+        await fundAirline(config, config.owner);
 
-    it('(airline3) can\'t register 5th', async () => {
-        let airline5 = accounts[23];
-        // now register the second airline
+        await registerAirline(config, airline2, config.owner);
+        await registerAirline(config, airline3, config.owner);
+        await registerAirline(config, airline4, config.owner);
+        await fundAirline(config, airline2);
+        await fundAirline(config, airline3);
+        await fundAirline(config, airline4);
 
-        try {
-            await config.flightSuretyApp.registerAirline(airline5);
-        } catch (e) {}
-
-        let result5 = await config.flightSuretyData.isAirline(airline5, {from: config.flightSuretyApp.address});
-
-        assert.equal(result5, false, "Fifth is by votting!");
+        // here 1-5 airlines (always 5 airline registered, maximum) is registred, so 3 votes is necessary to register 
+        let result = false;
+        result = await config.flightSuretyApp.registerAirline(airline5).then(async () => {
+            return await config.flightSuretyApp.registerAirline(airline5, {from: airline2}).then(async () => {
+                return await config.flightSuretyData.isAirline.call(airline5).then((result) => {
+                    return result;
+                })
+            });
+        });
+        // await registerAirline(config, airline5, airline2, true);
+        // await registerAirline(config, airline5, airline3, true);
+        // await registerAirline(config, airline5, airline4, true);
+        
+        // let result = await isAirline(config, airline5);
+        assert.equal(result, true, "Airline 5 not registred by votting");
     });
-
-//   it('(airline) can\'t repeat vote for new airline registration', async () => {
-//     let eightth = accounts[8];
-
-//     // try {
-//     //     await config.flightSuretyApp.unregisterAirline(eightth);
-//     // } catch (e) {
-//     //     console.log('error removeAirline', e);
-//     // }
-
-//     try {
-//         await config.flightSuretyApp.registerAirline(eightth);
-//     } catch (e) {
-//         console.log('error registerAirline', e);
-//     }
-
-//     let isRegistred = await config.flightSuretyData.isAirline(eightth, {from: config.flightSuretyApp.address});
-//     let result = await config.flightSuretyApp.getVotesCount(eightth, {from: config.flightSuretyApp.address});
-
-//     assert.equal(isRegistred, false, "From fifth airline need to vote for new airlines!");
-//     assert.equal(result.toNumber(), 1, "Only one vot per registred airline for new registration!");
-//   });
 
 });
+
+async function isAirline(config, airline) {
+    return await config.flightSuretyData.isAirline.call(airline);
+}
+
+async function registerAirline(config, airline, registerer, debug) {
+    try {
+        await config.flightSuretyApp.registerAirline(airline, {from: registerer});
+    } catch (e) {
+        if(debug)
+            console.log('registerAirline error', e);
+    }
+}
+
+async function unregisterAirline(config, airline) {
+    try {
+        await config.flightSuretyApp.unregisterAirline(airline);
+    } catch (e) {
+        console.log('unregisterAirline', e);
+    }
+}
+
+async function fundAirline(config, airline, debug) {
+    try {
+        await config.flightSuretyApp.fundAirline({from: airline});
+    } catch(e){
+        if(debug)
+            console.log('fundAirline error', e);
+    }
+}
+
+async function getFundStatus(config, airline, debug) {
+    return await config.flightSuretyData.isAirlineFunded.call(airline);
+}
