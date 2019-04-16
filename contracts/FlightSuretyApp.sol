@@ -222,15 +222,15 @@ contract FlightSuretyApp {
        }
     }
 
-    function fundAirline() external payable
+    function fundAirline() external //payable
     requireIsAirline(msg.sender)
     requireAirlineNotFunded(msg.sender)
-    returnFundChange
+    //returnFundChange
     {
         // minimum payment
-        require(msg.value >= AIRLINE_FUND, "Not enough to Fund yourself");
+        //require(msg.value >= AIRLINE_FUND, "Not enough to Fund yourself");
         
-        appData.fundAirline.value(msg.value)(msg.sender);
+        appData.fundAirline(msg.sender);
         
         emit AirlineFunded(msg.sender);
     }
@@ -475,5 +475,5 @@ contract FlightSuretyData {
     function isAirlineFunded(address airline) external view returns (bool);
     function updateAirlineFundState(address airline, bool newState) external;
     
-    function fundAirline(address owner) external payable {}
+    function fundAirline(address owner) public {}
 }

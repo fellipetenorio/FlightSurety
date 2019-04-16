@@ -108,12 +108,14 @@ contract('Flight Surety Tests', async (accounts) => {
 
     it(`(airline${aCount++}) can be funded`, async function () {
         let airline = config.owner;
+        
         await fundAirline(config,airline, 10, true);
+        
         let result = await getFundStatus(config, airline);
         console.log('result', result);
         assert.equal(result, true, "Airline not funded");
     });
-/*
+
     it(`(airline${aCount++}) can register 2th, 3th and 4th Airlines`, async function () {
         // fund previous airlines
         await registerAirline(config, airline2, config.owner);
@@ -127,15 +129,16 @@ contract('Flight Surety Tests', async (accounts) => {
 
     it(`(airline${aCount++}) can fund 2th, 3th and 4th Airlines`, async function () {
         // fund previous airlines
-        await fundAirline(config, airline2);
-        await fundAirline(config, airline3);
-        await fundAirline(config, airline4);
+        await fundAirline(config, airline2, 10, false);
+        await fundAirline(config, airline3, 10, false);
+        await fundAirline(config, airline4, 10, false);
 
         assert.equal(await getFundStatus(config, airline2), true, 'Airline 2 not funded');
         assert.equal(await getFundStatus(config, airline3), true, 'Airline 3 not funded');
         assert.equal(await getFundStatus(config, airline4), true, 'Airline 4 not funded');
     });
 
+/*
     it(`(airline${aCount++}) 5th do not have enough votes, so it can't be registered`, async function () {
         // unregister so we can reproduce all
         await unregisterAirline(config, airline5);
@@ -179,7 +182,8 @@ contract('Flight Surety Tests', async (accounts) => {
 });
 
 async function isAirline(config, airline) {
-    return await config.flightSuretyData.isAirline.call(airline);
+    return await config.flightSuretyData.isAirline.call(airline, 
+        {from: config.flightSuretyApp.address});
 }
 
 async function registerAirline(config, airline, registerer, debug) {
@@ -201,14 +205,14 @@ async function unregisterAirline(config, airline) {
 
 async function fundAirline(config, airline, fundingValue, debug) {
     try {
-        await config.flightSuretyApp.fundAirline.sendTransaction(
-            {from: airline, value: fundingValue});
+        await config.flightSuretyApp.fundAirline();
     } catch (e) {
         if (debug)
-            console.log('1 - airline2 fundAirline error', e);
+            console.log('airline fundAirline error', e);
     }
 }
 
 async function getFundStatus(config, airline) {
-    return await config.flightSuretyData.isAirlineFunded.call(airline);
+    return await config.flightSuretyData.isAirlineFunded.call(airline, 
+        {from: config.flightSuretyApp.address});
 }

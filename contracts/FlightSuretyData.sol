@@ -148,7 +148,10 @@ contract FlightSuretyData {
      * @dev Verify if an address is a Airline
      *
      */
-    function isAirline (address airline) external view requireIsOperational returns (bool)
+    function isAirline (address airline) external view 
+    requireIsOperational 
+    isCallerAuthorized 
+    returns (bool)
     {
         return airlines[airline].isRegistered;
     }
@@ -220,11 +223,11 @@ contract FlightSuretyData {
      *      resulting in insurance payouts, the contract should be self-sustaining
      *
      */
-    function fundAirline (address owner) public payable
-        requireIsOperational
-        isCallerAuthorized
+    function fundAirline (address owner) public //payable
+        //requireIsOperational
+        //isCallerAuthorized
     {
-        balance = balance.add(msg.value);
+        //balance = balance.add(msg.value);
         airlines[owner].isFunded = true;
     }
 
@@ -247,9 +250,9 @@ contract FlightSuretyData {
     */
     function()
     external
-    payable
-    requireIsOperational
-    isCallerAuthorized
+    //payable
+    //requireIsOperational
+    //isCallerAuthorized
     {
         fundAirline(msg.sender);
     }
