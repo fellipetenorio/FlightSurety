@@ -108,7 +108,7 @@ contract FlightSuretyApp {
 
 
     //region Airline
-    uint256 public constant AIRLINE_FUND = 10 ether;
+    uint256 public constant AIRLINE_FUND = 10;
     // handle consesus to register airline
     mapping(address => address[]) airlineConsensus; // newAirline => registredAirline[]
 
@@ -118,8 +118,7 @@ contract FlightSuretyApp {
     event AirlineStatus(address airline, bool registered, bool funded);
     event AirlineRegistered(address airline, uint count, uint votes);
     event AirlineFunded(address airline);
-    event AirlineConsensus(address newAirline, uint votes);
-
+    
 //region airline modifiers
 
     modifier requireIsAirline(address airline) {
@@ -177,7 +176,6 @@ contract FlightSuretyApp {
         emit AirlineRegistered(msg.sender, airlineCount, 0);
     }
 
-    event AttempToRegister(address newAirline, address currentAirline, uint count);
     /**
     * @dev Add an airline to the registration queue
     *
@@ -186,7 +184,7 @@ contract FlightSuretyApp {
                             (address airline)
                             external
                             requireIsOperational
-                            // requireIsAirline(msg.sender)
+                            requireIsAirline(msg.sender)
 
     {
         require(appData.isAirlineFunded(msg.sender), "Airline Caller not funded");
@@ -212,8 +210,7 @@ contract FlightSuretyApp {
        require(!isDuplicate, "Registred Airline already voted for this new Consesus");
        
        airlineConsensus[airline].push(msg.sender);
-       emit AirlineConsensus(airline, airlineConsensus[airline].length);
-
+       
        // check if can register airlinbe
        if(airlineConsensus[airline].length >= airlineCount.div(2)) {
            appData.registerAirline(airline);
@@ -225,14 +222,15 @@ contract FlightSuretyApp {
        }
     }
 
-    function fundAirline() external //payable
+    function fundAirline() external payable
     requireIsAirline(msg.sender)
     requireAirlineNotFunded(msg.sender)
-//    returnFundChange
+    returnFundChange
     {
-        // Airline sent fund
-        //address(appData).transfer(msg.value);
-        appData.updateAirlineFundState(msg.sender, true);
+        // minimum payment
+        require(msg.value >= AIRLINE_FUND, "Not enough to Fund yourself");
+        
+        appData.fundAirline.value(msg.value)(msg.sender);
         
         emit AirlineFunded(msg.sender);
     }
@@ -407,7 +405,7 @@ contract FlightSuretyApp {
     function getFlightKey
                         (
                             address airline,
-                            string flight,
+                            string memory flight,
                             uint256 timestamp
                         )
                         pure
@@ -477,5 +475,5 @@ contract FlightSuretyData {
     function isAirlineFunded(address airline) external view returns (bool);
     function updateAirlineFundState(address airline, bool newState) external;
     
-    function() external payable;
+    function fundAirline(address owner) external payable {}
 }

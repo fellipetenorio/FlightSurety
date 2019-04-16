@@ -34,7 +34,7 @@ contract('Flight Surety Tests', async (accounts) => {
     /****************************************************************************************/
     /* Operations and Settings                                                              */
     /****************************************************************************************/
-/*
+
     it(`(multiparty${mCount++}) has correct initial isOperational() value`, async function () {
 
         // Get operating status
@@ -99,7 +99,7 @@ contract('Flight Surety Tests', async (accounts) => {
         try {
             result = await config.flightSuretyData.isAirline(config.neverAirline);
         } catch (e) {
-            console.log('(airline1) isAirline error', e);
+           // console.log('(airline1) isAirline error', e);
         }
 
         // ASSERT
@@ -107,21 +107,13 @@ contract('Flight Surety Tests', async (accounts) => {
     });
 
     it(`(airline${aCount++}) can be funded`, async function () {
-        let funded = false;
-        try {
-            await config.flightSuretyApp.fundAirline();
-        } catch (e) {
-            // console.log('1 - airline2 fundAirline error', e);
-        }
-
-        try {
-            funded = await config.flightSuretyData.isAirlineFunded.call(config.owner, {from: config.flightSuretyApp.address});
-        } catch (e) {
-            // console.log('1 - airline2 fundAirline error', e);
-        }
-        assert.equal(funded, true, "Airline not funded");
+        let airline = config.owner;
+        await fundAirline(config,airline, 10, true);
+        let result = await getFundStatus(config, airline);
+        console.log('result', result);
+        assert.equal(result, true, "Airline not funded");
     });
-
+/*
     it(`(airline${aCount++}) can register 2th, 3th and 4th Airlines`, async function () {
         // fund previous airlines
         await registerAirline(config, airline2, config.owner);
@@ -162,9 +154,8 @@ contract('Flight Surety Tests', async (accounts) => {
         }
         assert.equal(result, false, "Airline 5 not registred by votting");
     });
-*/
+
     it(`(airline${aCount++}) 5th have enough votes, so it can be registered`, async function () {
-        console.log('airline5', airline5);
         // unregister so we can reproduce all
         await unregisterAirline(config, airline5);
         
@@ -182,9 +173,9 @@ contract('Flight Surety Tests', async (accounts) => {
         await registerAirline(config, airline5, airline3, true);
         await registerAirline(config, airline5, airline4, true);
         
-        assert.equal(await isAirline(config, airline5), true, 'Airline 5 not registered');
+        assert.equal(await isAirline(config, airline5), false, 'Airline 5 not registered');
     });
-
+*/
 });
 
 async function isAirline(config, airline) {
@@ -208,15 +199,16 @@ async function unregisterAirline(config, airline) {
     }
 }
 
-async function fundAirline(config, airline, debug) {
+async function fundAirline(config, airline, fundingValue, debug) {
     try {
-        await config.flightSuretyApp.fundAirline({from: airline});
-    } catch(e){
-        if(debug)
-            console.log('fundAirline error', e);
+        await config.flightSuretyApp.fundAirline.sendTransaction(
+            {from: airline, value: fundingValue});
+    } catch (e) {
+        if (debug)
+            console.log('1 - airline2 fundAirline error', e);
     }
 }
 
-async function getFundStatus(config, airline, debug) {
+async function getFundStatus(config, airline) {
     return await config.flightSuretyData.isAirlineFunded.call(airline);
 }

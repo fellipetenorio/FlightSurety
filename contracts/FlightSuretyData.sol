@@ -220,13 +220,12 @@ contract FlightSuretyData {
      *      resulting in insurance payouts, the contract should be self-sustaining
      *
      */
-    function fund
-    (
-    )
-    public
-    payable
+    function fundAirline (address owner) public payable
+        requireIsOperational
+        isCallerAuthorized
     {
         balance = balance.add(msg.value);
+        airlines[owner].isFunded = true;
     }
 
     function getFlightKey
@@ -249,8 +248,10 @@ contract FlightSuretyData {
     function()
     external
     payable
+    requireIsOperational
+    isCallerAuthorized
     {
-        fund();
+        fundAirline(msg.sender);
     }
 }
 
