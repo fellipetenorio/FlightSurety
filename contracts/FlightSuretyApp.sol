@@ -74,6 +74,8 @@ contract FlightSuretyApp {
     event AirlineFunded(address airline);
 
     event AirlineUnregistered(address airline, bool fundState);
+    event FlightSurety(address passenger, string flightID);
+
     // Event fired each time an oracle submits a response
     event FlightStatusInfo(address airline, string flight, uint256 timestamp, uint8 status);
     event OracleReport(address airline, string flight, uint256 timestamp, uint8 status);
@@ -235,12 +237,19 @@ contract FlightSuretyApp {
         emit OracleRequest(index, airline, flight, timestamp);
     }
 
-    function buyFlightSurety(address passenger, string flight) external payable {
+    function buyFlightSurety(address passenger, string flight) external payable requireIsOperational {
         appData.buy.value(msg.value)(passenger, flight);
+        emit FlightSurety(passenger, flight);
     }
     
     function getFlightKey (address airline, string memory flight, uint256 timestamp) pure internal returns(bytes32) {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
+    }
+
+    function flightSuretyInfo(address passenger, string flighID) external view returns(uint256) {
+        bytes32 key = keccak256(abi.encodePacked(passenger, flighID));
+
+        return appData.flightSuretyInfo(key);
     }
 //endregion 
 
@@ -308,8 +317,8 @@ contract FlightSuretyData {
     function fundAirline(address owner) public;
     //endregion
 
-    function buy(address passenger, string flight) public payable {}
+    function buy (address buyer, string flightID) external payable;
+    function flightSuretyInfo(bytes32 key) external view returns(uint256);
     // TODO function creditInsurees(address passenger, string flight) external payable{}
     // TODO function registerFlight(address airline, string flightId, uint256 timestamp) external {}
-    // TODO function flightSuretyInfo(address passenger, string flight) external returns(uint256){}
 }

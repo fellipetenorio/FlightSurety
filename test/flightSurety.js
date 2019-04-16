@@ -8,6 +8,7 @@ let airline3;
 let airline4;
 let airline5;
 let airlineNeveRegistered;
+let p1, p2, p3, p4, p5;
 
 contract('Flight Surety Tests', async (accounts) => {
 
@@ -28,6 +29,15 @@ contract('Flight Surety Tests', async (accounts) => {
         airline3 = accounts[21];
         airline4 = accounts[22];
         airline5 = accounts[23];
+        airline5 = accounts[23];
+
+        p1 = accounts[30];
+        p2 = accounts[31];
+        p3 = accounts[32];
+        p4 = accounts[33];
+        p5 = accounts[34];
+        p5 = accounts[35];
+        
         airlineNeveRegistered = config.neverAirline;
     });
 
@@ -181,13 +191,33 @@ contract('Flight Surety Tests', async (accounts) => {
 
     it(`(flight${fCount++}) passenger can't pay more then 1 ether for a surety flight`, async function () {
         let flightID = "NotThatExpensive";
+        let v = 1000000000;
+
+        await buySurety(config, p1, flightID, v);
+
+        let result = await config.flightSuretyApp.flightSuretyInfo.call(p1, flightID, {"from": p1});
+        assert.equal(result, v, "Surety not purchased");
+    });
+
+    it(`(flight${fCount++}) passenger can't buy twice a surety for a flight`, async function () {
+        let flightID = "NotThatExpensive";
+        let v = 1000000000;
+
+        let ok = false;
+        try {
+            await buySurety(config, p1, flightID, v);
+        } catch(e) {
+            ok = true;
+        }
+
+        assert.equal(ok, true, "Can't buy same surety more then once");
 
     });
 
 });
 
 async function buySurety(config, buyer, flightID, value) {
-
+    await config.flightSuretyApp.buyFlightSurety(buyer, flightID, { from: buyer, value: value});
 }
 
 async function isAirline(config, airline) {

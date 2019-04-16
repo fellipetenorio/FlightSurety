@@ -108,10 +108,15 @@ contract FlightSuretyData {
 
     // fligth
     function buy (address buyer, string flightID) external payable 
-        requireIsOperational requireFlightSuretyPrice requireContractOwner {
+        requireIsOperational requireFlightSuretyPrice isCallerAuthorized {
         bytes32 key = keccak256(abi.encodePacked(buyer, flightID));
         require(!flights[key].isInsured, "Flight already isured");
+        require(flightKeySurety[key] <= 0, "Surety already bought by passenger");
         flightKeySurety[key] = msg.value;
+    }
+
+    function flightSuretyInfo(bytes32 key) external view requireIsOperational isCallerAuthorized returns(uint256) {
+        return flightKeySurety[key];
     }
 
     function creditInsurees () external pure {
