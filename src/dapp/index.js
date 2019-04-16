@@ -32,6 +32,7 @@ import './flightsurety.css';
         // Read transaction
         contract.isOperational((error, result) => {
             contract.flights.forEach(flight => {
+                console.log('flight asdfasdfsadf', flight);
                 displayList(flight, DOM.flightSelector)
             });
             display('Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
@@ -42,18 +43,19 @@ import './flightsurety.css';
             fromBlock: "latest"
         }, function (error, result) {
             if (error) {
-                console.log(error)
-            } else {
-                console.log("Flight status info received");
-                console.log(result.returnValues);
-                let els = document.querySelectorAll(`.${ btoa(result.returnValues.timestamp + result.returnValues.flight)}`);
-                console.log(els[els.length - 1]);
-                els[els.length - 1].querySelector(".results").innerText = result.returnValues.status === "10" ? "10 - On time" : `${result.returnValues.status} - ${STATUS_CODES.find(code => code.code == result.returnValues.status).label}`;
-            }
+                return console.log(error)
+            } 
+            
+            console.log("Flight status info received");
+            console.log(result.returnValues);
+            let els = document.querySelectorAll(`.${ btoa(result.returnValues.timestamp + result.returnValues.flight)}`);
+            console.log(els[els.length - 1]);
+            els[els.length - 1].querySelector(".results").innerText = result.returnValues.status === "10" ? "10 - On time" : `${result.returnValues.status} - ${STATUS_CODES.find(code => code.code == result.returnValues.status).label}`;
+            
         });
 
 
-        contract.flightSuretyData.events.CreditInsured({
+        contract.flightSuretyApp.events.FlightInsured({
             fromBlock: "latest"
         }, function (error, result) {
             if (error) {
@@ -63,12 +65,11 @@ import './flightsurety.css';
             }
         });
 
-
-
         // User-submitted transaction
         DOM.elid('submit-oracle').addEventListener('click', () => {
             // I know this manipulation is not safe nor recommended, but it just to make it to work now
             let flight = JSON.parse(document.querySelector('#flights-selector').value);
+            console.log('flight', flight);
             // Write transaction
             contract.fetchFlightStatus(flight, (error, result) => {
                 display('Oracles', 'Trigger oracles', [ { label: 'Fetch Flight Status', error: error, value: result.flight + ' ' + `Requested at ${new Date().toLocaleString()}`} ], btoa(result.timestamp + result.flight));
@@ -114,12 +115,4 @@ function display(title, description, results, customClass = null) {
         section.appendChild(row);
     });
     displayDiv.append(section);
-
 }
-
-
-
-
-
-
-

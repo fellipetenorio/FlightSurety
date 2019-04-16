@@ -55,7 +55,7 @@ function initAccounts() {
             authorizeCaller(
                 accounts[0]
             ).then(result => {
-                flightSuretyApp.methods.fund(accounts[0]).send({
+                flightSuretyApp.methods.fundAirline().send({
                     from: accounts[0],
                     "value": 10,
                     "gas": 4712388,

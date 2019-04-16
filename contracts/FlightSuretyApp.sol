@@ -217,6 +217,10 @@ contract FlightSuretyApp {
         
         emit AirlineFunded(msg.sender);
     }
+
+    function getActiveAirlines() external view returns(address[]) {
+        return appData.getActiveAirlines();
+    }
 //endregion
 
 //region Flight
@@ -325,6 +329,7 @@ contract FlightSuretyData {
     function isAirlineFunded(address airline) external view returns (bool);
     function updateAirlineFundState(address airline, bool newState) external;
     function fundAirline(address owner) public;
+    function getActiveAirlines() returns(address[]);
     //endregion
 
     function buy (address buyer, string flightID) external payable;

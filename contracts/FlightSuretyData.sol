@@ -34,6 +34,7 @@ contract FlightSuretyData {
     }
     mapping(string => Flight) private flights;
     mapping(bytes32 => uint256) flightKeySurety;
+    address[] airlinesEnables = new address[](0);
 
     event FlightRegistered(string indexed account);
 
@@ -52,6 +53,7 @@ contract FlightSuretyData {
     {
         contractOwner = msg.sender;
         airlines[msg.sender] = Airline({isRegistered : true, isFunded : false});
+        airlinesEnables.push(msg.sender);
     }
 
     // modifiers
@@ -77,6 +79,12 @@ contract FlightSuretyData {
 
     function registerAirline (address airline) external requireIsOperational isCallerAuthorized {
         airlines[airline] = Airline({isRegistered : true, isFunded : false});
+        airlinesEnables.push(airline);
+    }
+
+    function getActiveAirlines() requireIsOperational isCallerAuthorized returns(address[])
+    {
+        return airlinesEnables;
     }
 
     function isAirline (address airline) external view requireIsOperational isCallerAuthorized returns (bool) {

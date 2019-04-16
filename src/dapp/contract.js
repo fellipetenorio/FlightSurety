@@ -11,7 +11,7 @@ export default class Contract {
     constructor(network, callback) {
 
         let config = Config[network];
-        this.web3 = new Web3(new Web3.providers.WebsocketProvider(config.url));
+        this.web3 = new Web3(new Web3.providers.WebsocketProvider(config.url.replace('http', 'ws')));
         this.flightSuretyApp = new this.web3.eth.Contract(FlightSuretyApp.abi, config.appAddress, config.dataAddress);
         this.flightSuretyData = new this.web3.eth.Contract(FlightSuretyData.abi, config.dataAddress);
         this.initialize(callback);
@@ -100,11 +100,11 @@ export default class Contract {
             value = 1;
         }
 
-        let processedValue = self.web3.utils.toWei(value);
+        let processedValue = self.web3.utils.toWei(value+"");
         console.log(options);
 
         self.flightSuretyApp.methods
-            .buy(self.owner, options.flight)
+            .buyFlightSurety(self.owner, options.flight)
             .send({ from: self.owner, value: processedValue}, (error, result) => {
                 callback(error ? error.message : `User ${self.owner} paid ${processedValue} on flight's ${options.flight} surety`, options);
             });
