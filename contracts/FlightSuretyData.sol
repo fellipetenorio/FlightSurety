@@ -32,10 +32,10 @@ contract FlightSuretyData {
         address airline;
         bool isInsured;
     }
-    mapping(bytes32 => Flight) private flights;
+    mapping(string => Flight) private flights;
     mapping(bytes32 => uint256) flightKeySurety;
 
-    event FlightRegistered(bytes32 indexed account);
+    event FlightRegistered(string indexed account);
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -99,18 +99,22 @@ contract FlightSuretyData {
         airlines[airline].isFunded = false;
     }
 
-    function fundAirline (address owner) public 
-    /*payable requireIsOperational isCallerAuthorized */ {
-        // TODO
-        //balance = balance.add(msg.value);
-        airlines[owner].isFunded = true;
+    function fundAirline (address airline) public 
+    payable requireIsOperational isCallerAuthorized {
+        uint256 currentAmount = airlineFunds[airline];
+        uint256 newTotal = currentAmount.add(msg.value);
+
+        airlineFunds[airline] = 0;
+        airline.transfer(newTotal);
+
+        airlines[airline].isFunded = true;
     }
 
     // fligth
     function buy (address buyer, string flightID) external payable 
         requireIsOperational requireFlightSuretyPrice isCallerAuthorized {
         bytes32 key = keccak256(abi.encodePacked(buyer, flightID));
-        require(!flights[key].isInsured, "Flight already isured");
+        require(!flights[flightID].isInsured, "Flight already isured");
         require(flightKeySurety[key] <= 0, "Surety already bought by passenger");
         flightKeySurety[key] = msg.value;
     }
@@ -119,12 +123,39 @@ contract FlightSuretyData {
         return flightKeySurety[key];
     }
 
-    function creditInsurees () external pure {
-        // TODO
+    function creditInsurees (address passenger, string flight) external payable isCallerAuthorized requireIsOperational {
+        bytes32 key = keccak256(abi.encodePacked(passenger, flight));
+        uint256 currentFund = flightKeySurety[key];
+        require(currentFund > 0, "There is no value to refund");
+        
+        uint256 amountToCredit = currentFund.mul(15).div(10);
+        flightKeySurety[key] = amountToCredit;
     }
 
-    function pay () external pure {
-        // TODO
+    function withdraw (string flight, uint256 amount) external isCallerAuthorized requireIsOperational {
+
+        bytes32 key = keccak256(abi.encodePacked(msg.sender, flight));
+        uint256 value = flightKeySurety[key];
+
+        require(value >= amount, "No value to withdraw");
+
+        flightKeySurety[key] = 0;
+        msg.sender.transfer(amount);
+        flightKeySurety[key] = value.sub(amount);
+    }
+
+    function registerFlight (address airline, string flightId, uint256 timestamp) external isCallerAuthorized requireIsOperational {
+
+        require(airlines[airline].isRegistered, "Airline does not exists");
+        flights[flightId] = Flight({
+            isRegistered: true,
+            statusCode: 0,
+            updatedTimestamp: timestamp,
+            airline: airline,
+            isInsured: false
+        });
+
+        emit FlightRegistered(flightId);
     }
 
     function getFlightKey (address airline, string memory flight, uint256 timestamp) pure internal returns (bytes32) {
@@ -132,8 +163,12 @@ contract FlightSuretyData {
     }
     
     // fallback
-    function() external
-    /*payable requireIsOperational isCallerAuthorized */ {
+        function()
+    external
+    payable
+    requireIsOperational
+    isCallerAuthorized
+    {
         fundAirline(msg.sender);
     }
 }

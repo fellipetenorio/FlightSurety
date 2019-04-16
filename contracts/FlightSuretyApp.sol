@@ -75,6 +75,7 @@ contract FlightSuretyApp {
 
     event AirlineUnregistered(address airline, bool fundState);
     event FlightSurety(address passenger, string flightID);
+    event FlightInsured(address passenger, string flight);
 
     // Event fired each time an oracle submits a response
     event FlightStatusInfo(address airline, string flight, uint256 timestamp, uint8 status);
@@ -208,7 +209,7 @@ contract FlightSuretyApp {
        }
     }
 
-    function fundAirline() external /*payable TODO*/ requireIsAirline(msg.sender) 
+    function fundAirline() external payable requireIsAirline(msg.sender) 
         requireAirlineNotFunded(msg.sender) /*returnFundChange TODO*/ {
         //require(msg.value >= AIRLINE_FUND, "Not enough to Fund yourself");
         
@@ -250,6 +251,15 @@ contract FlightSuretyApp {
         bytes32 key = keccak256(abi.encodePacked(passenger, flighID));
 
         return appData.flightSuretyInfo(key);
+    }
+
+    function creditInsurees(address passenger, string flight) external payable {
+        appData.creditInsurees(passenger, flight);
+        emit FlightInsured(passenger, flight);
+    }
+    
+    function registerFlight(address airline, string flightId, uint256 timestamp) external {
+        appData.registerFlight(airline, flightId, timestamp);
     }
 //endregion 
 
@@ -319,6 +329,6 @@ contract FlightSuretyData {
 
     function buy (address buyer, string flightID) external payable;
     function flightSuretyInfo(bytes32 key) external view returns(uint256);
-    // TODO function creditInsurees(address passenger, string flight) external payable{}
-    // TODO function registerFlight(address airline, string flightId, uint256 timestamp) external {}
+    function creditInsurees(address passenger, string flight) external payable;
+    function registerFlight(address airline, string flightId, uint256 timestamp) external;
 }
