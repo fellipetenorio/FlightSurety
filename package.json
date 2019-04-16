@@ -9,6 +9,7 @@
   "license": "MIT",
   "scripts": {
     "test": "truffle test --network development ./test/flightSurety.js",
+    "test2": "truffle test --network development ./test/oracles.js",
     "dapp": "webpack-dev-server --mode development --config webpack.config.dapp.js",
     "dapp:prod": "webpack --mode production  --config webpack.config.dapp.js",
     "server": "rm -rf ./build/server && webpack --config webpack.config.server.js"
@@ -35,7 +36,7 @@
     "start-server-webpack-plugin": "2.2.5",
     "style-loader": "^0.23.1",
     "superstatic": "6.0.3",
-    "truffle": "5.0.2",
+    "truffle": "4.1.14",
     "truffle-hdwallet-provider": "1.0.2",
     "web3": "1.0.0-beta.37",
     "webpack": "^4.30.0",

@@ -21,7 +21,6 @@ contract('Flight Surety Tests', async (accounts) => {
         await config.flightSuretyData.authorizeCaller(config.flightSuretyApp.address);
 
         // register first airline (owner)
-        await config.flightSuretyApp.registerFirstAirline();
         console.log('owner is Airline?', await config.flightSuretyData.isAirline.call(config.owner));
 
         airline2 = accounts[20];
@@ -112,7 +111,6 @@ contract('Flight Surety Tests', async (accounts) => {
         await fundAirline(config,airline, 10, true);
         
         let result = await getFundStatus(config, airline);
-        console.log('result', result);
         assert.equal(result, true, "Airline not funded");
     });
 
@@ -205,7 +203,7 @@ async function unregisterAirline(config, airline) {
 
 async function fundAirline(config, airline, fundingValue, debug) {
     try {
-        await config.flightSuretyApp.fundAirline();
+        await config.flightSuretyApp.fundAirline({from: airline});
     } catch (e) {
         if (debug)
             console.log('airline fundAirline error', e);
