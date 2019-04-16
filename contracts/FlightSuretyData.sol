@@ -30,10 +30,10 @@ contract FlightSuretyData {
         uint8 statusCode;
         uint256 updatedTimestamp;        
         address airline;
+        bool isInsured;
     }
     mapping(bytes32 => Flight) private flights;
-    mapping(bytes32 => address[]) flightPayments;
-    mapping(bytes32 => uint256) flightSurety;
+    mapping(bytes32 => uint256) flightKeySurety;
 
     event FlightRegistered(bytes32 indexed account);
 
@@ -58,7 +58,7 @@ contract FlightSuretyData {
     modifier requireIsOperational() { require(operational, "Contract is currently not operational"); _;}
     modifier requireContractOwner() {require(msg.sender == contractOwner, "Caller is not contract owner"); _;}
     modifier isCallerAuthorized() { require(authorizedContracts[msg.sender] == 1, "Unauthorized access (Caller)"); _;}
-    modifier requireFlightSuretyPrice() { require(msg.value <= 1, "Max price is 1 ether"); _; }
+    modifier requireFlightSuretyPrice() { require(msg.value <= FLIGHT_MAX_PRICE, "Max price is 1 ether"); _; }
 
     // Utils
     function isOperational() external view returns (bool) { return operational; }
@@ -107,8 +107,11 @@ contract FlightSuretyData {
     }
 
     // fligth
-    function buy (address buyer, string flightID) external payable requireIsOperational {
-        // TODO
+    function buy (address buyer, string flightID) external payable 
+        requireIsOperational requireFlightSuretyPrice requireContractOwner {
+        bytes32 key = keccak256(abi.encodePacked(buyer, flightID));
+        require(!flights[key].isInsured, "Flight already isured");
+        flightKeySurety[key] = msg.value;
     }
 
     function creditInsurees () external pure {

@@ -2,6 +2,7 @@ var Test = require('../config/testConfig.js');
 var BigNumber = require('bignumber.js');
 var mCount = 1;
 var aCount = 1;
+var fCount = 1;
 let airline2;
 let airline3;
 let airline4;
@@ -177,7 +178,17 @@ contract('Flight Surety Tests', async (accounts) => {
         assert.equal(await isAirline(config, airline5), false, 'Airline 5 not registered');
     });
 */
+
+    it(`(flight${fCount++}) passenger can't pay more then 1 ether for a surety flight`, async function () {
+        let flightID = "NotThatExpensive";
+
+    });
+
 });
+
+async function buySurety(config, buyer, flightID, value) {
+
+}
 
 async function isAirline(config, airline) {
     return await config.flightSuretyData.isAirline.call(airline, 
