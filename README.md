@@ -11,6 +11,10 @@ To install, download or clone the repo, then:
 `npm install`
 `truffle compile`
 
+## Ganache
+Run the Ganhache UI or the CLI in port 7545:
+`ganache-cli -l 999999999999 -d -a 50 -e 1000 -m "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" -p 7545`
+
 ## Develop Client
 
 To run truffle tests:
