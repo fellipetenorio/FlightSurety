@@ -87,15 +87,15 @@ contract FlightSuretyData {
         return airlinesEnables;
     }
 
-    function isAirline (address airline) external view requireIsOperational isCallerAuthorized returns (bool) {
+    function isAirline (address airline) external view requireIsOperational returns (bool) {
         return airlines[airline].isRegistered;
     }
 
-    function isAirlineRegistred(address airline) external view requireIsOperational isCallerAuthorized returns (bool) {
+    function isAirlineRegistred(address airline) external view requireIsOperational returns (bool) {
         return airlines[airline].isRegistered;
     }
 
-    function isAirlineFunded(address airline) external view requireIsOperational isCallerAuthorized returns (bool) {
+    function isAirlineFunded(address airline) external view requireIsOperational returns (bool) {
         return airlines[airline].isFunded;
     }
 
